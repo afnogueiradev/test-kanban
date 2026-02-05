@@ -2,11 +2,11 @@
   <q-page class="bg-grey-1 q-pa-md">
     <div class="row q-col-gutter-md justify-center">
       <kanban-column
-        v-for="col in columns"
+        v-for="col in store.columns"
         :key="col.id"
         :title="col.title"
         :tasks="col.tasks"
-        @delete-task="removeTask"
+        @delete-task="store.removeTask"
         @edit-task="openEditTaskDialog"
       />
     </div>
@@ -25,23 +25,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import type { Column, Task, Priority } from 'src/components/models';
+import { useKanbanStore } from 'src/stores/kanban'; // Importando a Store
+import type { Task, Priority } from 'src/components/models';
 import KanbanColumn from 'src/components/KanbanColumn.vue';
 
 const $q = useQuasar();
-const STORAGE_KEY = 'kanban-data-v1';
+const store = useKanbanStore();
 
-// 1. ESTADO REATIVO DO BOARD
-const columns = ref<Column[]>([
-  { id: 'todo', title: 'To Do', tasks: [] },
-  { id: 'progress', title: 'In Progress', tasks: [] },
-  { id: 'done', title: 'Done', tasks: [] }
-]);
+// Inicialização: Carrega os dados do LocalStorage ao montar a página
+onMounted(() => {
+  store.loadFromStorage();
+});
+
+// Watcher profundo para garantir que qualquer mudança (incluindo drag-and-drop)
+// seja persistida automaticamente no LocalStorage através da Store
+watch(() => store.columns, () => {
+  store.saveToStorage();
+}, { deep: true });
 
 /**
- * 2. LÓGICA DE CRIAÇÃO (Novo Item)
+ * DIÁLOGO DE CRIAÇÃO
+ * Fluxo: Título -> Descrição -> Prioridade
  */
 const openNewTaskDialog = () => {
   $q.dialog({
@@ -56,10 +62,9 @@ const openNewTaskDialog = () => {
     cancel: true,
     persistent: true
   }).onOk((title: string) => {
-    // Passo 2: Descrição
     $q.dialog({
       title: 'Descrição',
-      message: 'Adicione mais detalhes:',
+      message: 'Adicione detalhes da tarefa:',
       prompt: {
         model: '',
         type: 'textarea',
@@ -67,32 +72,33 @@ const openNewTaskDialog = () => {
       },
       cancel: true
     }).onOk((description: string) => {
-      // Passo 3: Prioridade
       $q.bottomSheet({
-        message: 'Defina a Prioridade:',
+        message: 'Prioridade:',
         actions: [
           { label: 'Baixa', id: 'low', color: 'positive', icon: 'keyboard_arrow_down' },
           { label: 'Média', id: 'medium', color: 'warning', icon: 'remove' },
           { label: 'Alta', id: 'high', color: 'negative', icon: 'keyboard_arrow_up' }
         ]
       }).onOk((action) => {
-        const newTask: Task = {
-          id: Date.now().toString(),
-          title,
-          description: description || 'Sem descrição',
-          priority: action.id as Priority
-        };
-        columns.value[0]!.tasks.push(newTask);
+        // Chama a action da Store para adicionar
+        store.addTask(title, description, action.id as Priority);
+
+        $q.notify({
+          type: 'positive',
+          message: 'Tarefa criada!',
+          position: 'top',
+          timeout: 1000
+        });
       });
     });
   });
 };
 
 /**
- * 3. LÓGICA DE EDIÇÃO (Item Existente)
+ * DIÁLOGO DE EDIÇÃO
+ * Fluxo: Título -> Descrição -> Prioridade (com dados pré-preenchidos)
  */
 const openEditTaskDialog = (task: Task) => {
-  // Passo 1: Editar Título
   $q.dialog({
     title: 'Editar Tarefa',
     message: 'Altere o título:',
@@ -105,18 +111,15 @@ const openEditTaskDialog = (task: Task) => {
     cancel: true,
     persistent: true
   }).onOk((newTitle: string) => {
-    // Passo 2: Editar Descrição
     $q.dialog({
       title: 'Editar Descrição',
       prompt: {
-        model: task.description || '', // Correção do erro de tipagem que vimos antes
+        model: task.description || '', // Tratamento de tipagem para string vazia
         type: 'textarea',
         label: 'Descrição'
       },
-      cancel: true,
-      persistent: true
+      cancel: true
     }).onOk((newDescription: string) => {
-      // Passo 3: Editar Prioridade (O que estava faltando!)
       $q.bottomSheet({
         message: 'Alterar Prioridade:',
         actions: [
@@ -125,55 +128,24 @@ const openEditTaskDialog = (task: Task) => {
           { label: 'Alta', id: 'high', color: 'negative', icon: 'keyboard_arrow_up' }
         ]
       }).onOk((action) => {
-        // Atualizamos todos os campos no estado reativo
+        // Atualiza a tarefa diretamente (reatividade do Pinia)
         task.title = newTitle;
         task.description = newDescription;
-        task.priority = action.id as Priority; // Agora a prioridade é atualizada!
+        task.priority = action.id as Priority;
+
+        // Persiste a mudança
+        store.saveToStorage();
 
         $q.notify({
           type: 'info',
-          message: 'Tarefa atualizada com sucesso!',
-          timeout: 1000,
-          position: 'top'
+          message: 'Tarefa atualizada!',
+          position: 'top',
+          timeout: 1000
         });
       });
     });
   });
 };
-
-/**
- * 4. REMOÇÃO DE TAREFA
- */
-const removeTask = (taskId: string) => {
-  $q.dialog({
-    title: 'Excluir',
-    message: 'Tem certeza que deseja remover esta tarefa?',
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-    columns.value.forEach(col => {
-      col.tasks = col.tasks.filter(t => t.id !== taskId);
-    });
-  });
-};
-
-/**
- * 5. PERSISTÊNCIA (OFFLINE-FIRST)
- */
-onMounted(() => {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      columns.value = JSON.parse(saved);
-    } catch (e) {
-      console.error('Falha ao restaurar dados:', e);
-    }
-  }
-});
-
-watch(columns, (newVal) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
-}, { deep: true });
 </script>
 
 <style scoped>
