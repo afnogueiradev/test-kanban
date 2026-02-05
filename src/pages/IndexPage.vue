@@ -7,6 +7,7 @@
         :title="col.title"
         :tasks="col.tasks"
         @delete-task="removeTask"
+        @edit-task="openEditTaskDialog"
       />
     </div>
 
@@ -32,7 +33,7 @@ import KanbanColumn from 'src/components/KanbanColumn.vue';
 const $q = useQuasar();
 const STORAGE_KEY = 'kanban-data-v1';
 
-// Estado das colunas conforme requisitos
+// 1. ESTADO REATIVO DO BOARD
 const columns = ref<Column[]>([
   { id: 'todo', title: 'To Do', tasks: [] },
   { id: 'progress', title: 'In Progress', tasks: [] },
@@ -40,35 +41,33 @@ const columns = ref<Column[]>([
 ]);
 
 /**
- * Abre o QDialog para cadastro da tarefa
- * Requisitos: Título (obrigatório), Descrição (opcional) e Prioridade (Badge colorido)
+ * 2. LÓGICA DE CRIAÇÃO (Novo Item)
  */
 const openNewTaskDialog = () => {
   $q.dialog({
     title: '📝 Nova Tarefa',
-    message: 'Insira o título da tarefa (mínimo 3 caracteres):',
+    message: 'Insira o título da tarefa:',
     prompt: {
       model: '',
       type: 'text',
       label: 'Título (obrigatório)',
-      isValid: (val: string) => val.length >= 3,
+      isValid: (val: string) => val.length >= 3
     },
     cancel: true,
     persistent: true
   }).onOk((title: string) => {
-    // Segundo passo: Descrição
+    // Passo 2: Descrição
     $q.dialog({
       title: 'Descrição',
-      message: 'Insira detalhes adicionais:',
+      message: 'Adicione mais detalhes:',
       prompt: {
         model: '',
         type: 'textarea',
-        label: 'Descrição (opcional)',
+        label: 'Descrição (opcional)'
       },
-      cancel: true,
-      persistent: true
+      cancel: true
     }).onOk((description: string) => {
-      // Terceiro passo: Prioridade
+      // Passo 3: Prioridade
       $q.bottomSheet({
         message: 'Defina a Prioridade:',
         actions: [
@@ -79,17 +78,62 @@ const openNewTaskDialog = () => {
       }).onOk((action) => {
         const newTask: Task = {
           id: Date.now().toString(),
-          title: title,
-          description: description || 'Sem descrição adicional',
+          title,
+          description: description || 'Sem descrição',
           priority: action.id as Priority
         };
-
-        // Adiciona na coluna "To Do"
         columns.value[0]!.tasks.push(newTask);
+      });
+    });
+  });
+};
+
+/**
+ * 3. LÓGICA DE EDIÇÃO (Item Existente)
+ */
+const openEditTaskDialog = (task: Task) => {
+  // Passo 1: Editar Título
+  $q.dialog({
+    title: 'Editar Tarefa',
+    message: 'Altere o título:',
+    prompt: {
+      model: task.title,
+      type: 'text',
+      label: 'Título',
+      isValid: (val: string) => val.length >= 3
+    },
+    cancel: true,
+    persistent: true
+  }).onOk((newTitle: string) => {
+    // Passo 2: Editar Descrição
+    $q.dialog({
+      title: 'Editar Descrição',
+      prompt: {
+        model: task.description || '', // Correção do erro de tipagem que vimos antes
+        type: 'textarea',
+        label: 'Descrição'
+      },
+      cancel: true,
+      persistent: true
+    }).onOk((newDescription: string) => {
+      // Passo 3: Editar Prioridade (O que estava faltando!)
+      $q.bottomSheet({
+        message: 'Alterar Prioridade:',
+        actions: [
+          { label: 'Baixa', id: 'low', color: 'positive', icon: 'keyboard_arrow_down' },
+          { label: 'Média', id: 'medium', color: 'warning', icon: 'remove' },
+          { label: 'Alta', id: 'high', color: 'negative', icon: 'keyboard_arrow_up' }
+        ]
+      }).onOk((action) => {
+        // Atualizamos todos os campos no estado reativo
+        task.title = newTitle;
+        task.description = newDescription;
+        task.priority = action.id as Priority; // Agora a prioridade é atualizada!
 
         $q.notify({
-          type: 'positive',
-          message: 'Tarefa criada com sucesso!',
+          type: 'info',
+          message: 'Tarefa atualizada com sucesso!',
+          timeout: 1000,
           position: 'top'
         });
       });
@@ -97,33 +141,44 @@ const openNewTaskDialog = () => {
   });
 };
 
-// Persistência Offline-first
+/**
+ * 4. REMOÇÃO DE TAREFA
+ */
+const removeTask = (taskId: string) => {
+  $q.dialog({
+    title: 'Excluir',
+    message: 'Tem certeza que deseja remover esta tarefa?',
+    cancel: true,
+    persistent: true
+  }).onOk(() => {
+    columns.value.forEach(col => {
+      col.tasks = col.tasks.filter(t => t.id !== taskId);
+    });
+  });
+};
+
+/**
+ * 5. PERSISTÊNCIA (OFFLINE-FIRST)
+ */
 onMounted(() => {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
       columns.value = JSON.parse(saved);
     } catch (e) {
-      console.error('Erro ao restaurar dados', e);
+      console.error('Falha ao restaurar dados:', e);
     }
   }
 });
 
-// Watch para salvar automaticamente qualquer alteração
 watch(columns, (newVal) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
 }, { deep: true });
-
-const removeTask = (taskId: string) => {
-  columns.value.forEach(col => {
-    col.tasks = col.tasks.filter(t => t.id !== taskId);
-  });
-};
 </script>
 
 <style scoped>
 .q-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 </style>

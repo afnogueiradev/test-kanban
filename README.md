@@ -27,7 +27,11 @@
 - **Validação e Tipagem:** Uso de validações obrigatórias para o título da tarefa e tratamento estrito de tipos para evitar erros de compilação com `vue-tsc`.
 - **Entrada de Dados Flexível:** Suporte para descrições detalhadas utilizando campos de `textarea` dentro de modais dinâmicas do Quasar.
 
-
+### 📝 Gestão de Tarefas (CRUD)
+- **Edição Completa**: Implementação de um fluxo reativo que permite a alteração de títulos, descrições detalhadas e níveis de prioridade diretamente nos cards.
+- **Interface Fluida**: Utilização de `QDialog` e `BottomSheet` para criar um ambiente de edição focado (modal), ideal para aplicações PWA e utilização móvel.
+- **Arquitetura de Eventos**: Comunicação eficiente entre componentes (Card -> Coluna -> Página) através de `emits`, mantendo o estado da aplicação centralizado e previsível.
+- **Feedback em Tempo Real**: Uso do plugin `QNotify` para confirmar atualizações e garantir que o utilizador saiba que as alterações foram guardadas.
 
 ## 📦 Como rodar o projeto
 1. Instale as dependências: `npm install`

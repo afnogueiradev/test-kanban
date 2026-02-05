@@ -1,9 +1,22 @@
 <template>
-  <q-card class="task-card q-mb-md shadow-2 cursor-pointer" flat bordered>
+  <q-card
+    class="task-card q-mb-md shadow-2 cursor-pointer"
+    flat
+    bordered
+    @click="$emit('edit', task)"
+  >
     <q-card-section class="q-pb-none">
       <div class="row items-center justify-between">
         <q-badge :color="priorityColor" :label="task.priority.toUpperCase()" />
-        <q-btn flat round dense icon="delete" size="sm" color="grey-6" @click.stop="$emit('delete', task.id)" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="delete"
+          size="sm"
+          color="grey-6"
+          @click.stop="$emit('delete', task.id)"
+        />
       </div>
       <div class="text-subtitle1 text-weight-bold q-mt-sm">{{ task.title }}</div>
     </q-card-section>
@@ -19,7 +32,8 @@ import { computed } from 'vue';
 import type { Task } from './models';
 
 const props = defineProps<{ task: Task }>();
-defineEmits(['delete']);
+
+defineEmits(['delete', 'edit']);
 
 const priorityColor = computed(() => {
   const map = { low: 'positive', medium: 'warning', high: 'negative' };
