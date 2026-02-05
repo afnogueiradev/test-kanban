@@ -33,6 +33,8 @@
 - **Arquitetura de Eventos**: Comunicação eficiente entre componentes (Card -> Coluna -> Página) através de `emits`, mantendo o estado da aplicação centralizado e previsível.
 - **Feedback em Tempo Real**: Uso do plugin `QNotify` para confirmar atualizações e garantir que o utilizador saiba que as alterações foram guardadas.
 
+- **Persistência Reativa**: Integração entre o estado reativo do Vue 3 (`ref` com `deep watch`) e o `localStorage`, garantindo que qualquer edição seja guardada instantaneamente no dispositivo do utilizador (Offline-first).
+
 ## 📦 Como rodar o projeto
 1. Instale as dependências: `npm install`
 2. Inicie em modo de desenvolvimento: `npx quasar dev`
