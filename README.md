@@ -19,6 +19,11 @@
 - **Feedback Visual de UX:** Implementação de `ghost-class` para indicar a área de drop e feedback visual durante o arraste dos cards.
 - **Sincronização de Estado:** Gerenciamento reativo da ordem e posicionamento das tarefas entre diferentes colunas utilizando Composition API.
 
+- **Persistência Offline-First:** Implementação de armazenamento local via `localStorage`, garantindo que os dados do Kanban sejam preservados mesmo após o fechamento do navegador ou recarregamento da página.
+- **Sincronização Automática:** Utilização de `watch` com profundidade (`deep: true`) para detectar e salvar qualquer alteração nas tarefas ou movimentação entre colunas em tempo real.
+- **Ciclo de Vida:** Gerenciamento de estado inicial via `onMounted` para recuperação de dados persistidos no boot da aplicação.
+
+
 ## 📦 Como rodar o projeto
 1. Instale as dependências: `npm install`
 2. Inicie em modo de desenvolvimento: `npx quasar dev`
