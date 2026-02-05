@@ -35,7 +35,43 @@
 
 - **Persistência Reativa**: Integração entre o estado reativo do Vue 3 (`ref` com `deep watch`) e o `localStorage`, garantindo que qualquer edição seja guardada instantaneamente no dispositivo do utilizador (Offline-first).
 
+### 📦 Gerenciamento de Estado (State Management)
+Nesta etapa, o projeto passou por uma refatoração arquitetural para utilizar o **Pinia**, elevando a escalabilidade da aplicação:
+
+* **Store Centralizada:** Toda a lógica de manipulação de dados (Criação, Leitura, Atualização e Exclusão) foi movida para a `KanbanStore`, deixando os componentes focados apenas na interface.
+* **Single Source of Truth:** O estado das colunas e tarefas é gerenciado de forma global, garantindo consistência de dados em toda a aplicação.
+* **Persistência Reativa Sincronizada:** Utilização de *actions* e *watchers* profundos para garantir que qualquer alteração no estado (incluindo o Drag-and-Drop) seja refletida instantaneamente no `localStorage`.
+* **Código Limpo e Tipado:** Total integração com TypeScript, garantindo que as interfaces de `Task` e `Column` sejam respeitadas em todas as operações de estado.
+
+## 📸 Demonstração
+
+### Tela Principal (Board)
+![Home Screen](kanban-test/src/screenshots/principal.png)
+
+### Cadastro de Tarefas (PWA)
+![Nova Tarefa Titulo](kanban-test/src/screenshots/nova-tarefa-titulo.png)
+![Nova Tarefa Descrição](kanban-test/src/screenshots/nova-tarefa-descricao.png)
+![Nova Tarefa Prioridade](kanban-test/src/screenshots/nova-tarefa-prioridade.png)
+
+
 ## 📦 Como rodar o projeto
 1. Instale as dependências: `npm install`
 2. Inicie em modo de desenvolvimento: `npx quasar dev`
 3. Para testar o modo PWA: `npx quasar dev -m pwa`
+
+## 📱 Como Instalar no Celular (PWA)
+
+Como este projeto é um **Progressive Web App**, você pode instalá-lo e utilizá-lo com experiência de aplicativo nativo, sem precisar da App Store ou Play Store.
+
+### No Android (Chrome):
+1.  Acesse o link do projeto pelo navegador **Chrome**.
+2.  Clique no ícone de **três pontos** no canto superior direito.
+3.  Selecione a opção **"Instalar aplicativo"** ou **"Adicionar à tela de início"**.
+4.  O ícone do **MeuKanban** aparecerá na sua grade de aplicativos.
+
+### No iOS (Safari):
+1.  Acesse o link do projeto pelo navegador **Safari**.
+2.  Clique no ícone de **Compartilhar** (quadrado com uma seta para cima).
+3.  Role as opções e clique em **"Adicionar à Tela de Início"**.
+4.  Confirme clicando em **"Adicionar"** no canto superior direito.
+
