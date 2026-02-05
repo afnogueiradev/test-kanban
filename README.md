@@ -23,6 +23,11 @@
 - **Sincronização Automática:** Utilização de `watch` com profundidade (`deep: true`) para detectar e salvar qualquer alteração nas tarefas ou movimentação entre colunas em tempo real.
 - **Ciclo de Vida:** Gerenciamento de estado inicial via `onMounted` para recuperação de dados persistidos no boot da aplicação.
 
+- **Fluxo de Cadastro Multi-Etapa:** Implementação de um sistema de criação de tarefas segmentado (Título -> Descrição -> Prioridade) para otimizar a experiência do usuário em dispositivos móveis.
+- **Validação e Tipagem:** Uso de validações obrigatórias para o título da tarefa e tratamento estrito de tipos para evitar erros de compilação com `vue-tsc`.
+- **Entrada de Dados Flexível:** Suporte para descrições detalhadas utilizando campos de `textarea` dentro de modais dinâmicas do Quasar.
+
+
 
 ## 📦 Como rodar o projeto
 1. Instale as dependências: `npm install`
